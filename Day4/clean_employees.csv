@@ -1,0 +1,11 @@
+id,name,department,salary,experience,joining_date,city,annual_salary,joining_year,experience_level
+1,Aniket Dombale,Data Engineering,55000.0,1,2025-06-10,Pune,660000.0,2025,Junior
+2,Rahul Sharma,Data Analytics,48000.0,2,2024-07-15,Mumbai,576000.0,2024,Mid-Level
+3,Priya Patil,Data Engineering,65000.0,3,2023-04-20,Pune,780000.0,2023,Mid-Level
+4,Amit Kumar,Data Science,60000.0,2,2024-01-12,Bangalore,720000.0,2024,Mid-Level
+5,Sneha Joshi,Data Analytics,52000.0,1,2025-02-10,Pune,624000.0,2025,Junior
+6,Rohit Verma,Data Engineering,75000.0,5,2021-08-05,Hyderabad,900000.0,2021,Senior
+7,Neha Singh,Data Science,55000.0,3,2023-09-18,Mumbai,660000.0,2023,Mid-Level
+8,Aniket Dombale,Data Engineering,55000.0,1,2025-06-10,Pune,660000.0,2025,Junior
+9,Karan Mehta,Unknown,45000.0,1,2025-03-11,Delhi,540000.0,2025,Junior
+10,Pooja Shah,Data Analytics,58000.0,4,2022-11-25,Pune,696000.0,2022,Senior

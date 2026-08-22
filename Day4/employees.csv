@@ -1,0 +1,11 @@
+id,name,department,salary,experience,joining_date,city
+1, Aniket Dombale ,Data Engineering,55000,1,2025-06-10,Pune
+2,Rahul Sharma,Data Analytics,48000,2,2024-07-15,Mumbai
+3,Priya Patil,DATA ENGINEERING,65000,3,2023-04-20,Pune
+4,Amit Kumar,Data Science,60000,2,2024-01-12,Bangalore
+5, Sneha Joshi, data analytics ,52000,1,2025-02-10,Pune
+6,Rohit Verma,Data Engineering,75000,5,2021-08-05,Hyderabad
+7,Neha Singh,Data Science,,3,2023-09-18,Mumbai
+8,Aniket Dombale,Data Engineering,55000,1,2025-06-10,Pune
+9,Karan Mehta,,45000,1,2025-03-11,Delhi
+10,Pooja Shah,Data Analytics,58000,4,2022-11-25,Pune
