@@ -1,0 +1,458 @@
+Data Engineering — Day 8
+
+SQL Subqueries & CTEs — Quick README
+
+Goal: Learn how to write multi-step SQL queries using Subqueries, IN, EXISTS, Correlated Subqueries, and CTEs.
+
+1. Subquery
+
+Definition: A subquery is a SQL query inside another SQL query.
+
+Example
+
+Find employees earning more than the company average:
+
+SELECT name, salary
+FROM employees
+WHERE salary > (
+    SELECT AVG(salary)
+    FROM employees
+);
+
+Use when: You need the result of one query inside another query.
+
+2. Scalar Subquery
+
+Definition: A subquery that returns one value.
+
+Example
+
+SELECT MAX(salary)
+FROM employees;
+
+Use it inside another query:
+
+SELECT name, salary
+FROM employees
+WHERE salary = (
+    SELECT MAX(salary)
+    FROM employees
+);
+
+Remember: = is commonly used when the subquery returns one value.
+
+3. IN + Subquery
+
+Definition: IN checks whether a value exists in a set of returned values.
+
+Example
+
+Find employees working in departments located in Pune:
+
+SELECT name, department_id
+FROM employees
+WHERE department_id IN (
+    SELECT department_id
+    FROM departments
+    WHERE location = 'Pune'
+);
+
+Remember:
+
+=  → usually one value
+IN → multiple possible values
+
+4. EXISTS
+
+Definition: Checks whether at least one matching row exists.
+
+Example
+
+SELECT d.department_name
+FROM departments d
+WHERE EXISTS (
+    SELECT 1
+    FROM employees e
+    WHERE e.department_id = d.department_id
+);
+
+Simple meaning:
+"Does this department have at least one employee?"
+
+5. NOT EXISTS
+
+Definition: Checks whether no matching row exists.
+
+Example
+
+SELECT d.department_name
+FROM departments d
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM employees e
+    WHERE e.department_id = d.department_id
+);
+
+Simple meaning:
+"Which departments have no employees?"
+
+6. Correlated Subquery
+
+Definition: A subquery that depends on the current row of the outer query.
+
+Example
+
+Find employees earning more than their department average:
+
+SELECT
+    e.name,
+    e.department_id,
+    e.salary
+FROM employees e
+WHERE e.salary > (
+    SELECT AVG(e2.salary)
+    FROM employees e2
+    WHERE e2.department_id = e.department_id
+);
+
+Key point
+
+Outer query → employee
+Inner query → that employee's department average
+Compare     → employee salary > department average
+
+7. Subquery in FROM
+
+Definition: A subquery can act like a temporary table.
+
+Example
+
+SELECT *
+FROM (
+    SELECT
+        department,
+        AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY department
+) AS dept_salary;
+
+Use when: You need to perform another operation on an intermediate result.
+
+8. Subquery in SELECT
+
+Definition: A subquery can also return a calculated value as a column.
+
+Example
+
+SELECT
+    name,
+    salary,
+    (SELECT AVG(salary) FROM employees) AS company_avg
+FROM employees;
+
+9. CTE — Common Table Expression ⭐
+
+Definition: A CTE is a named temporary result created using WITH.
+
+Basic syntax
+
+WITH cte_name AS (
+    SELECT ...
+)
+SELECT *
+FROM cte_name;
+
+Example
+
+WITH dept_salary AS (
+    SELECT
+        department,
+        AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY department
+)
+SELECT *
+FROM dept_salary
+WHERE avg_salary > 60000;
+
+Simple meaning:
+
+Step 1 → Create temporary result
+Step 2 → Use that result
+
+10. CTE + JOIN
+
+Example
+
+WITH dept_salary AS (
+    SELECT
+        department_id,
+        AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY department_id
+)
+SELECT
+    d.department_name,
+    d.location,
+    ds.avg_salary
+FROM departments d
+JOIN dept_salary ds
+    ON d.department_id = ds.department_id;
+
+Use when: You need to calculate something first and then combine it with another table.
+
+11. Multiple CTEs
+
+Definition: You can create multiple CTEs in one query.
+
+Example
+
+WITH dept_stats AS (
+    SELECT
+        department_id,
+        COUNT(*) AS employee_count,
+        AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY department_id
+),
+high_salary_depts AS (
+    SELECT *
+    FROM dept_stats
+    WHERE avg_salary > 60000
+)
+SELECT *
+FROM high_salary_depts;
+
+Flow
+
+employees
+   ↓
+dept_stats
+   ↓
+high_salary_depts
+   ↓
+final result
+
+12. CTE for Data Cleaning / Validation
+
+CTEs are useful in ETL/ELT transformations.
+
+Example
+
+Find invalid salaries:
+
+WITH invalid_employees AS (
+    SELECT *
+    FROM employees
+    WHERE salary <= 0
+)
+SELECT *
+FROM invalid_employees;
+
+Simple meaning:
+First identify bad records, then process the result.
+
+13. Subquery vs CTE
+
+Concept
+
+Simple meaning
+
+Subquery
+
+Query inside another query
+
+CTE
+
+Named temporary query result
+
+IN
+
+Check membership in a set
+
+EXISTS
+
+Check whether a matching row exists
+
+Correlated Subquery
+
+Inner query depends on outer query
+
+General rule
+
+Simple problem
+    ↓
+Subquery
+
+Complex multi-step problem
+    ↓
+CTE
+
+14. Important SQL Patterns
+
+Employees above average salary
+
+SELECT *
+FROM employees
+WHERE salary > (
+    SELECT AVG(salary)
+    FROM employees
+);
+
+Highest-paid employee
+
+SELECT *
+FROM employees
+WHERE salary = (
+    SELECT MAX(salary)
+    FROM employees
+);
+
+Departments with employees
+
+SELECT d.department_name
+FROM departments d
+WHERE EXISTS (
+    SELECT 1
+    FROM employees e
+    WHERE e.department_id = d.department_id
+);
+
+Departments without employees
+
+SELECT d.department_name
+FROM departments d
+WHERE NOT EXISTS (
+    SELECT 1
+    FROM employees e
+    WHERE e.department_id = d.department_id
+);
+
+Department average using CTE
+
+WITH dept_avg AS (
+    SELECT
+        department_id,
+        AVG(salary) AS avg_salary
+    FROM employees
+    GROUP BY department_id
+)
+SELECT *
+FROM dept_avg;
+
+15. Interview Quick Revision
+
+What is a subquery?
+
+A query inside another query.
+
+What is a CTE?
+
+A named temporary result created using WITH.
+
+IN vs EXISTS?
+
+IN      → checks whether a value is in a set
+EXISTS  → checks whether a matching row exists
+
+What is a correlated subquery?
+
+A subquery that references a column from the outer query.
+
+Why use CTEs?
+
+They make complex SQL easier to:
+
+Read
+
+Debug
+
+Organize
+
+Maintain
+
+Can we use multiple CTEs?
+
+Yes.
+
+Can we JOIN a CTE?
+
+Yes.
+
+Can we use GROUP BY inside a CTE?
+
+Yes.
+
+16. Day 8 Practice
+
+Find employees earning more than average salary.
+
+Find the highest-paid employee.
+
+Find the lowest-paid employee.
+
+Find employees from departments located in Pune.
+
+Find departments having at least one employee.
+
+Find departments having no employees.
+
+Calculate average salary per department using a CTE.
+
+Find departments with average salary > ₹60,000.
+
+Use CTE + JOIN to display department name, location, employee count and average salary.
+
+Find employees earning more than their department average.
+
+⭐ Must Remember
+
+Subquery
+    ↓
+Query inside query
+
+IN
+    ↓
+Value belongs to a set
+
+EXISTS
+    ↓
+Matching row exists
+
+NOT EXISTS
+    ↓
+Matching row does NOT exist
+
+Correlated Subquery
+    ↓
+Inner query depends on outer query
+
+CTE
+    ↓
+WITH → temporary named result
+
+Multiple CTEs
+    ↓
+Break complex SQL into steps
+
+Data Engineering Connection
+
+A real transformation often looks like:
+
+Raw Tables
+    ↓
+Filter bad data
+    ↓
+CTE
+    ↓
+Aggregate
+    ↓
+Another CTE
+    ↓
+JOIN
+    ↓
+Business Rules
+    ↓
+Final Dataset
+    ↓
+Data Warehouse
