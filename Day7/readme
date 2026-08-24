@@ -1,0 +1,992 @@
+Data Engineering — Day 9
+
+SQL Window Functions — Complete Revision README
+
+Practical notes for revision, implementation, and interviews.
+
+1. What are Window Functions?
+
+A window function performs a calculation across related rows without collapsing the rows.
+
+SELECT
+    name,
+    department_id,
+    salary,
+    AVG(salary) OVER (
+        PARTITION BY department_id
+    ) AS department_avg_salary
+FROM employees;
+
+Every employee stays visible, while the department average is added.
+
+GROUP BY vs Window Function
+
+GROUP BY
+→ combines rows
+→ usually one result row per group
+
+Window Function
+→ keeps original rows
+→ calculates across related rows
+
+2. OVER()
+
+OVER() tells SQL to perform a function as a window function.
+
+AVG(salary) OVER ()
+
+Example:
+
+SELECT
+    name,
+    salary,
+    AVG(salary) OVER () AS company_avg_salary
+FROM employees;
+
+No PARTITION BY means the whole table is one window.
+
+3. PARTITION BY
+
+PARTITION BY divides rows into logical groups.
+
+SELECT
+    name,
+    department_id,
+    salary,
+    AVG(salary) OVER (
+        PARTITION BY department_id
+    ) AS department_avg
+FROM employees;
+
+Think:
+
+All employees
+    ↓
+PARTITION BY department_id
+    ↓
+101 → separate calculation
+102 → separate calculation
+103 → separate calculation
+
+Important: PARTITION BY does not remove rows.
+
+4. ORDER BY inside OVER()
+
+It controls the order used by the window calculation.
+
+ROW_NUMBER() OVER (
+    ORDER BY salary DESC
+)
+
+For highest salary first:
+
+ORDER BY salary DESC
+
+For lowest first:
+
+ORDER BY salary ASC
+
+5. ROW_NUMBER()
+
+Definition
+
+Assigns a unique sequential number to every row.
+
+SELECT
+    name,
+    salary,
+    ROW_NUMBER() OVER (
+        ORDER BY salary DESC
+    ) AS row_num
+FROM employees;
+
+Output concept:
+
+75000 → 1
+70000 → 2
+65000 → 3
+60000 → 4
+
+Even tied values receive different numbers.
+
+Per department
+
+ROW_NUMBER() OVER (
+    PARTITION BY department_id
+    ORDER BY salary DESC
+)
+
+This creates a separate sequence inside each department.
+
+6. RANK()
+
+Gives tied values the same rank and leaves gaps.
+
+For:
+
+75000
+70000
+70000
+60000
+
+Result:
+
+1
+2
+2
+4
+
+Example:
+
+RANK() OVER (
+    ORDER BY salary DESC
+)
+
+7. DENSE_RANK()
+
+Gives tied values the same rank but does not leave gaps.
+
+75000 → 1
+70000 → 2
+70000 → 2
+60000 → 3
+
+Example:
+
+DENSE_RANK() OVER (
+    ORDER BY salary DESC
+)
+
+8. ROW_NUMBER vs RANK vs DENSE_RANK
+
+Function
+
+Ties
+
+Example
+
+ROW_NUMBER
+
+Unique numbers
+
+1,2,3,4
+
+RANK
+
+Same rank + gaps
+
+1,2,2,4
+
+DENSE_RANK
+
+Same rank + no gaps
+
+1,2,2,3
+
+Memory trick:
+
+ROW_NUMBER → unique
+RANK       → ties + gaps
+DENSE_RANK → ties + no gaps
+
+9. Top-N Records
+
+Top 3 employees by salary:
+
+WITH ranked AS (
+    SELECT
+        name,
+        salary,
+        ROW_NUMBER() OVER (
+            ORDER BY salary DESC
+        ) AS rn
+    FROM employees
+)
+SELECT
+    name,
+    salary
+FROM ranked
+WHERE rn <= 3;
+
+Flow:
+
+employees
+   ↓
+ROW_NUMBER
+   ↓
+ranked CTE
+   ↓
+WHERE rn <= 3
+   ↓
+Top 3
+
+10. Top-N Per Group ⭐
+
+Top 2 employees in every department:
+
+WITH ranked AS (
+    SELECT
+        name,
+        department_id,
+        salary,
+        ROW_NUMBER() OVER (
+            PARTITION BY department_id
+            ORDER BY salary DESC
+        ) AS rn
+    FROM employees
+)
+SELECT
+    name,
+    department_id,
+    salary
+FROM ranked
+WHERE rn <= 2;
+
+This is a classic interview problem.
+
+11. LAG()
+
+Returns a value from the previous row.
+
+SELECT
+    name,
+    salary,
+    LAG(salary) OVER (
+        ORDER BY salary
+    ) AS previous_salary
+FROM employees;
+
+Concept:
+
+48000 → NULL
+52000 → 48000
+55000 → 52000
+60000 → 55000
+
+Common uses:
+
+Compare current vs previous value
+
+Detect changes
+
+Calculate differences
+
+Compare transactions
+
+12. LEAD()
+
+Returns a value from the next row.
+
+SELECT
+    name,
+    salary,
+    LEAD(salary) OVER (
+        ORDER BY salary
+    ) AS next_salary
+FROM employees;
+
+Concept:
+
+48000 → 52000
+52000 → 55000
+55000 → 60000
+60000 → NULL
+
+Memory:
+
+LAG  → previous
+LEAD → next
+
+13. Salary Difference Using LAG()
+
+SELECT
+    name,
+    salary,
+    LAG(salary) OVER (
+        ORDER BY salary
+    ) AS previous_salary,
+    salary - LAG(salary) OVER (
+        ORDER BY salary
+    ) AS salary_difference
+FROM employees;
+
+14. Running Total
+
+Example sales:
+
+date   amount
+Jan 1  1000
+Jan 2  2000
+Jan 3  1500
+
+Running total:
+
+1000
+3000
+4500
+
+SQL:
+
+SELECT
+    sale_date,
+    amount,
+    SUM(amount) OVER (
+        ORDER BY sale_date
+    ) AS running_total
+FROM sales;
+
+15. Running Total Per Customer
+
+SELECT
+    customer_id,
+    sale_date,
+    amount,
+    SUM(amount) OVER (
+        PARTITION BY customer_id
+        ORDER BY sale_date
+    ) AS customer_running_total
+FROM sales;
+
+The total resets for each customer.
+
+16. Moving Average
+
+A moving average uses a sliding number of rows.
+
+3-row moving average:
+
+SELECT
+    sale_date,
+    amount,
+    AVG(amount) OVER (
+        ORDER BY sale_date
+        ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+    ) AS moving_avg
+FROM sales;
+
+Meaning:
+
+previous 2 rows + current row
+
+Useful for:
+
+Time-series analysis
+
+Sales trends
+
+Monitoring metrics
+
+Smoothing noisy data
+
+17. Window Frames
+
+A window frame defines exactly which rows participate.
+
+Previous 2 + current
+
+ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+
+Running calculation from first row
+
+ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+
+Common keywords:
+
+CURRENT ROW
+1 PRECEDING
+2 PRECEDING
+UNBOUNDED PRECEDING
+
+18. Aggregate Functions as Window Functions
+
+These can also be used with OVER():
+
+SUM()
+AVG()
+MIN()
+MAX()
+COUNT()
+
+Example:
+
+SELECT
+    name,
+    department_id,
+    salary,
+    SUM(salary) OVER (
+        PARTITION BY department_id
+    ) AS department_total,
+    AVG(salary) OVER (
+        PARTITION BY department_id
+    ) AS department_average,
+    MAX(salary) OVER (
+        PARTITION BY department_id
+    ) AS department_max,
+    COUNT(*) OVER (
+        PARTITION BY department_id
+    ) AS department_employee_count
+FROM employees;
+
+19. CTE + Window Functions
+
+Highest-paid employee in every department:
+
+WITH ranked AS (
+    SELECT
+        name,
+        department_id,
+        salary,
+        ROW_NUMBER() OVER (
+            PARTITION BY department_id
+            ORDER BY salary DESC
+        ) AS rn
+    FROM employees
+)
+SELECT
+    name,
+    department_id,
+    salary
+FROM ranked
+WHERE rn = 1;
+
+Flow:
+
+employees
+ ↓
+PARTITION BY department
+ ↓
+ORDER BY salary DESC
+ ↓
+ROW_NUMBER
+ ↓
+CTE
+ ↓
+WHERE rn = 1
+ ↓
+highest-paid per department
+
+20. Second-Highest Salary Per Department
+
+WITH ranked AS (
+    SELECT
+        name,
+        department_id,
+        salary,
+        DENSE_RANK() OVER (
+            PARTITION BY department_id
+            ORDER BY salary DESC
+        ) AS salary_rank
+    FROM employees
+)
+SELECT
+    name,
+    department_id,
+    salary
+FROM ranked
+WHERE salary_rank = 2;
+
+DENSE_RANK() is useful when tied salaries should share the same rank.
+
+21. Real Data Engineering — Deduplication ⭐
+
+Suppose a source sends multiple records for the same customer:
+
+customer_id | updated_at
+------------|-----------
+101         | 2026-08-01
+101         | 2026-08-05
+101         | 2026-08-10
+102         | 2026-08-03
+102         | 2026-08-07
+
+Keep only the latest record:
+
+WITH ranked AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY customer_id
+            ORDER BY updated_at DESC
+        ) AS rn
+    FROM customers
+)
+SELECT *
+FROM ranked
+WHERE rn = 1;
+
+Logic:
+
+Customer 101
+08-10 → 1
+08-05 → 2
+08-01 → 3
+
+Customer 102
+08-07 → 1
+08-03 → 2
+
+Keep rn = 1
+
+This is a very important ETL/ELT pattern.
+
+22. Real Data Engineering — Change Detection
+
+Suppose:
+
+customer_id
+event_date
+status
+
+Find the previous status:
+
+SELECT
+    customer_id,
+    event_date,
+    status,
+    LAG(status) OVER (
+        PARTITION BY customer_id
+        ORDER BY event_date
+    ) AS previous_status
+FROM customer_status;
+
+Then compare:
+
+current status
+vs
+previous status
+
+to detect changes.
+
+23. Real Data Engineering — Latest Record
+
+WITH latest AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY customer_id
+            ORDER BY updated_at DESC
+        ) AS rn
+    FROM customer_data
+)
+SELECT *
+FROM latest
+WHERE rn = 1;
+
+Meaning:
+
+Keep the most recently updated record for every customer.
+
+24. Important Syntax Patterns
+
+Basic
+
+FUNCTION() OVER ()
+
+Partition
+
+FUNCTION() OVER (
+    PARTITION BY group_column
+)
+
+Ordering
+
+FUNCTION() OVER (
+    ORDER BY sort_column
+)
+
+Partition + ordering
+
+FUNCTION() OVER (
+    PARTITION BY group_column
+    ORDER BY sort_column DESC
+)
+
+Window frame
+
+FUNCTION() OVER (
+    ORDER BY date_column
+    ROWS BETWEEN 2 PRECEDING AND CURRENT ROW
+)
+
+25. Which Function Should I Use?
+
+Need unique sequence?
+        ↓
+ROW_NUMBER()
+
+Need ranking with ties + gaps?
+        ↓
+RANK()
+
+Need ranking with ties + no gaps?
+        ↓
+DENSE_RANK()
+
+Need previous row?
+        ↓
+LAG()
+
+Need next row?
+        ↓
+LEAD()
+
+Need running total?
+        ↓
+SUM() OVER()
+
+Need running average?
+        ↓
+AVG() OVER()
+
+Need top-N per group?
+        ↓
+ROW_NUMBER()
++
+PARTITION BY
++
+ORDER BY
++
+CTE
+
+26. Common Mistakes
+
+Mistake 1 — Forgetting PARTITION BY
+
+Company-wide ranking:
+
+ROW_NUMBER() OVER (
+    ORDER BY salary DESC
+)
+
+Department ranking:
+
+ROW_NUMBER() OVER (
+    PARTITION BY department_id
+    ORDER BY salary DESC
+)
+
+Mistake 2 — Confusing ranking functions
+
+ROW_NUMBER → unique
+RANK       → ties + gaps
+DENSE_RANK → ties + no gaps
+
+Mistake 3 — Filtering window result directly
+
+Avoid:
+
+SELECT
+    *,
+    ROW_NUMBER() OVER (...) AS rn
+FROM employees
+WHERE rn = 1;
+
+Use a CTE:
+
+WITH ranked AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (...) AS rn
+    FROM employees
+)
+SELECT *
+FROM ranked
+WHERE rn = 1;
+
+Mistake 4 — Wrong sort direction
+
+DESC → highest first
+ASC  → lowest first
+
+27. Day 9 Practice Questions
+
+Use the Day 7 employees table.
+
+Display every employee with a row number based on salary descending.
+
+Rank employees using RANK().
+
+Rank employees using DENSE_RANK().
+
+Create a separate salary ranking for every department.
+
+Find the top 2 highest-paid employees in each department.
+
+Display each employee's salary and previous salary using LAG().
+
+Display each employee's salary and next salary using LEAD().
+
+Calculate salary difference from the previous row.
+
+Calculate average salary per department without GROUP BY.
+
+Find the highest-paid employee in each department.
+
+28. Day 9 Challenges
+
+Challenge 1
+
+Find the second-highest-paid employee in each department.
+
+Hint:
+
+PARTITION BY
++
+DENSE_RANK()
+
+Challenge 2
+
+Find the top 3 salaries in each department.
+
+Challenge 3
+
+Display:
+
+name
+department
+salary
+department_average_salary
+difference_from_department_average
+
+Challenge 4
+
+For:
+
+sales
+------
+sale_id
+sale_date
+customer_id
+amount
+
+calculate:
+
+customer_id
+sale_date
+amount
+running_total
+
+The running total must reset for every customer.
+
+Challenge 5
+
+Using LAG(), identify transactions where the amount is greater than the previous transaction.
+
+29. Interview Questions
+
+Be able to explain:
+
+What is a window function?
+
+What does OVER() do?
+
+What is PARTITION BY?
+
+PARTITION BY vs GROUP BY?
+
+What does ORDER BY inside OVER() do?
+
+What is ROW_NUMBER()?
+
+What is RANK()?
+
+What is DENSE_RANK()?
+
+Difference between all three ranking functions?
+
+What is LAG()?
+
+What is LEAD()?
+
+How do you calculate a running total?
+
+What is a window frame?
+
+How do you find top 3 records per group?
+
+How do you find second-highest salary per department?
+
+How do you remove duplicates using ROW_NUMBER()?
+
+How do you find the latest record per customer?
+
+How can window functions detect changes?
+
+Can aggregate functions be used with OVER()?
+
+Why are CTEs commonly used with window functions?
+
+30. Quick Revision Cheat Sheet
+
+WINDOW FUNCTION
+→ Calculation across related rows without collapsing them
+
+OVER()
+→ Defines the window
+
+PARTITION BY
+→ Divides rows into groups
+
+ORDER BY
+→ Defines calculation order
+
+ROW_NUMBER()
+→ Unique sequential number
+
+RANK()
+→ Ties + gaps
+
+DENSE_RANK()
+→ Ties + no gaps
+
+LAG()
+→ Previous row
+
+LEAD()
+→ Next row
+
+SUM() OVER()
+→ Running / partitioned total
+
+AVG() OVER()
+→ Running / partitioned average
+
+MIN() OVER()
+→ Window minimum
+
+MAX() OVER()
+→ Window maximum
+
+COUNT() OVER()
+→ Window count
+
+31. Most Important Patterns to Memorize
+
+Ranking
+
+ROW_NUMBER() OVER (
+    ORDER BY salary DESC
+)
+
+Ranking per group
+
+ROW_NUMBER() OVER (
+    PARTITION BY department_id
+    ORDER BY salary DESC
+)
+
+Top-N per group
+
+WITH ranked AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY department_id
+            ORDER BY salary DESC
+        ) AS rn
+    FROM employees
+)
+SELECT *
+FROM ranked
+WHERE rn <= 3;
+
+Previous row
+
+LAG(value) OVER (
+    ORDER BY date
+)
+
+Next row
+
+LEAD(value) OVER (
+    ORDER BY date
+)
+
+Running total
+
+SUM(amount) OVER (
+    ORDER BY date
+    ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW
+)
+
+Running total per group
+
+SUM(amount) OVER (
+    PARTITION BY customer_id
+    ORDER BY date
+)
+
+Latest record per customer
+
+WITH ranked AS (
+    SELECT
+        *,
+        ROW_NUMBER() OVER (
+            PARTITION BY customer_id
+            ORDER BY updated_at DESC
+        ) AS rn
+    FROM customers
+)
+SELECT *
+FROM ranked
+WHERE rn = 1;
+
+32. Data Engineering Connection
+
+A realistic SQL transformation can look like:
+
+Source System
+     ↓
+Raw Data
+     ↓
+Data Cleaning
+     ↓
+Deduplication
+     ↓
+ROW_NUMBER()
+     ↓
+Keep Latest Records
+     ↓
+LAG / LEAD
+     ↓
+Detect Changes
+     ↓
+Aggregations
+     ↓
+Running Metrics
+     ↓
+Business Transformations
+     ↓
+Data Warehouse
+
+Window Functions are therefore an important part of SQL-based ETL/ELT transformations.
+
+33. Day 9 Completion Checklist
+
+Before marking Day 9 complete, you should be able to write these without copying:
+
+ROW_NUMBER()
+
+RANK()
+
+DENSE_RANK()
+
+PARTITION BY
+
+LAG()
+
+LEAD()
+
+Running total
+
+Moving average
+
+Top 3 per group
+
+Highest-paid employee per department
+
+Second-highest salary per department
+
+Latest record per customer
+
+Deduplication using ROW_NUMBER()
