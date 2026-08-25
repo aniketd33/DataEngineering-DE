@@ -1,0 +1,54 @@
+QUERY OPTIMIZATION
+→ Make queries faster and more resource-efficient
+
+
+EXPLAIN
+→ Shows how the database plans to execute a query
+
+
+INDEX
+→ Helps locate data efficiently
+
+
+FULL TABLE SCAN
+→ Database checks a large portion/all of a table
+
+
+WHERE
+→ Filters rows before grouping
+
+
+HAVING
+→ Filters groups after GROUP BY
+
+
+SELECT *
+→ Avoid when unnecessary
+
+
+DISTINCT
+→ Removes duplicates but can require extra processing
+
+
+UNION
+→ Combines results and removes duplicates
+
+
+UNION ALL
+→ Combines results without removing duplicates
+
+
+ORDER BY
+→ Sorts results and can be expensive on large data
+
+
+LIMIT
+→ Restricts returned rows
+
+
+COMPOSITE INDEX
+→ Index containing multiple columns
+
+
+EXPLAIN PLAN
+→ Tool for investigating query performance
