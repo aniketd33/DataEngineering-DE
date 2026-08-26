@@ -1,0 +1,63 @@
+PYTHON + SQL
+→ Python controls/automates the workflow
+→ SQL works with database data
+
+
+sqlite3
+→ Python's built-in SQLite module
+
+
+connect()
+→ Opens database connection
+
+
+cursor()
+→ Executes SQL commands
+
+
+execute()
+→ Executes one SQL statement
+
+
+executemany()
+→ Executes the same operation for multiple records
+
+
+commit()
+→ Saves database changes
+
+
+rollback()
+→ Cancels uncommitted changes
+
+
+fetchone()
+→ Fetch one row
+
+
+fetchmany(n)
+→ Fetch n rows
+
+
+fetchall()
+→ Fetch all rows
+
+
+pd.read_sql()
+→ SQL → Pandas DataFrame
+
+
+df.to_sql()
+→ Pandas DataFrame → SQL table
+
+
+ETL
+→ Extract → Transform → Load
+
+
+ELT
+→ Extract → Load → Transform
+
+
+Incremental Load
+→ Process only new/changed data
