@@ -1,0 +1,74 @@
+DATA WAREHOUSE
+→ Centralized structured analytical data
+
+
+DATA LAKE
+→ Stores large amounts of raw/diverse data
+
+
+DATA LAKEHOUSE
+→ Combines lake flexibility with warehouse-style analytics
+
+
+OLTP
+→ Operational transactions
+
+
+OLAP
+→ Analytical workloads
+
+
+FACT TABLE
+→ Business events + measurable values
+
+
+DIMENSION TABLE
+→ Descriptive information
+
+
+STAR SCHEMA
+→ Fact surrounded by dimensions
+
+
+SNOWFLAKE SCHEMA
+→ More normalized dimensions
+
+
+PRIMARY KEY
+→ Uniquely identifies a row
+
+
+FOREIGN KEY
+→ Links tables
+
+
+NATURAL KEY
+→ Business/source identifier
+
+
+SURROGATE KEY
+→ Artificial warehouse-generated key
+
+
+GRAIN
+→ What one fact row represents
+
+
+SCD
+→ Handles changes in dimensions
+
+
+SCD TYPE 1
+→ Overwrite
+
+
+SCD TYPE 2
+→ Preserve history
+
+
+ETL
+→ Extract → Transform → Load
+
+
+ELT
+→ Extract → Load → Transform
