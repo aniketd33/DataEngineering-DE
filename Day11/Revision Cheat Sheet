@@ -1,0 +1,66 @@
+CASE WHEN
+→ Conditional logic
+
+
+COALESCE()
+→ First non-NULL value
+
+
+NULLIF()
+→ Returns NULL when two values are equal
+
+
+CTE
+→ Temporary named result using WITH
+
+
+SUBQUERY
+→ Query inside another query
+
+
+WINDOW FUNCTION
+→ Calculation across rows without collapsing them
+
+
+OVER()
+→ Defines the window
+
+
+PARTITION BY
+→ Creates groups within a window
+
+
+ROW_NUMBER()
+→ Unique sequential number
+
+
+RANK()
+→ Same rank for ties + gaps
+
+
+DENSE_RANK()
+→ Same rank for ties + no gaps
+
+
+LAG()
+→ Previous row
+
+
+LEAD()
+→ Next row
+
+
+SUM() OVER()
+→ Running/cumulative calculation
+
+
+AVG() OVER()
+→ Window average
+
+
+FIRST_VALUE()
+→ First value in window
+
+
+LAST_VALUE()
+→ Last value in windowv
